@@ -19,29 +19,43 @@ func NewHandler(service *service.Service) *Handler {
 }
 
 func (h *Handler) GetStudent(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
 
-	student := h.service.GetStudent(c.Request().Context(), id)
+	student, err := h.service.GetStudent(c.Request().Context(), id)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
 
 	return c.JSON(http.StatusOK, student)
 }
 
 func (h *Handler) GetAllSchedules(c echo.Context) error {
-	schedules := formatSchedules(h.service.GetAllSchedules(c.Request().Context()))
+	schedules, err := h.service.GetAllSchedules(c.Request().Context())
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
 
-	return c.JSON(http.StatusOK, schedules)
+	return c.JSON(http.StatusOK, formatSchedules(schedules))
 }
 
 func (h *Handler) GetGroupSchedule(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
 
-	schedule := formatSchedules(h.service.GetGroupSchedule(c.Request().Context(), id))
+	schedule, err := h.service.GetGroupSchedule(c.Request().Context(), id)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
 
-	return c.JSON(http.StatusOK, schedule)
+	return c.JSON(http.StatusOK, formatSchedules(schedule))
 }
 
 func (h *Handler) NewAttendance(c echo.Context) error {
-
 	var input struct {
 		SubjectID int    `json:"subject_id"`
 		VisitDay  string `json:"visit_day"`
@@ -50,10 +64,13 @@ func (h *Handler) NewAttendance(c echo.Context) error {
 	}
 
 	if err := c.Bind(&input); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
+		return JSON(c, http.StatusBadRequest, err)
 	}
 
-	parsedDate, _ := time.Parse("02.01.2006", input.VisitDay)
+	parsedDate, err := time.Parse("02.01.2006", input.VisitDay)
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
 
 	attendance := &models.Attendance{
 		SubjectID: input.SubjectID,
@@ -62,30 +79,44 @@ func (h *Handler) NewAttendance(c echo.Context) error {
 		StudentID: input.StudentID,
 	}
 
-	id := h.service.NewAttendance(c.Request().Context(), attendance)
+	id, err := h.service.NewAttendance(c.Request().Context(), attendance)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
 
 	return c.JSON(http.StatusOK, map[string]int{"id": id})
 }
 
 func (h *Handler) GetAttendanceBySubject(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
 
-	attendanceList := h.service.AttendanceBySubject(c.Request().Context(), id)
+	attendanceList, err := h.service.AttendanceBySubject(c.Request().Context(), id)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
 
 	return c.JSON(http.StatusOK, attendanceList)
 }
 
 func (h *Handler) GetAttendanceByStudent(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
 
-	attendanceList := h.service.AttendanceByStudent(c.Request().Context(), id)
+	attendanceList, err := h.service.AttendanceByStudent(c.Request().Context(), id)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
 
 	return c.JSON(http.StatusOK, attendanceList)
 }
 
 func formatSchedules(schedules []models.Schedule) []map[string]interface{} {
 	result := make([]map[string]interface{}, len(schedules))
-
 	for i, s := range schedules {
 		result[i] = map[string]interface{}{
 			"id":         s.ID,
@@ -96,4 +127,8 @@ func formatSchedules(schedules []models.Schedule) []map[string]interface{} {
 		}
 	}
 	return result
+}
+
+func JSON(c echo.Context, status int, err error) error {
+	return c.JSON(status, map[string]string{"error": err.Error()})
 }

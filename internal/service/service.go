@@ -15,26 +15,26 @@ func NewService(repo *postgres.Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) GetStudent(ctx context.Context, id int) *models.StudentWithGroupName {
+func (s *Service) GetStudent(ctx context.Context, id int) (*models.StudentWithGroupName, error) {
 	return s.repo.GetStudentByID(ctx, id)
 }
 
-func (s *Service) GetAllSchedules(ctx context.Context) models.GroupSchedule {
+func (s *Service) GetAllSchedules(ctx context.Context) (models.GroupSchedule, error) {
 	return s.repo.GetAllGroupSchedules(ctx)
 }
 
-func (s *Service) GetGroupSchedule(ctx context.Context, id int) models.GroupSchedule {
+func (s *Service) GetGroupSchedule(ctx context.Context, id int) (models.GroupSchedule, error) {
 	return s.repo.GetGroupScheduleByID(ctx, id)
 }
 
-func (s *Service) NewAttendance(ctx context.Context, attendance *models.Attendance) int {
+func (s *Service) NewAttendance(ctx context.Context, attendance *models.Attendance) (int, error) {
 	return s.repo.CreateAttendance(ctx, attendance)
 }
 
-func (s *Service) AttendanceBySubject(ctx context.Context, id int) []models.Attendance {
+func (s *Service) AttendanceBySubject(ctx context.Context, id int) ([]models.Attendance, error) {
 	return s.repo.GetAttendanceBySubjectID(ctx, id)
 }
 
-func (s *Service) AttendanceByStudent(ctx context.Context, id int) []models.Attendance {
+func (s *Service) AttendanceByStudent(ctx context.Context, id int) ([]models.Attendance, error) {
 	return s.repo.GetAttendanceByStudentID(ctx, id)
 }

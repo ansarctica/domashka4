@@ -40,6 +40,12 @@ CREATE TABLE schedule (
     FOREIGN KEY (subject_id) REFERENCES subjects(id)
 );
 
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE,
+    password_hash VARCHAR(255)
+);
+
 INSERT INTO subjects (name) VALUES
 ('Физика'),
 ('Калкулус'),
