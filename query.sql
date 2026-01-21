@@ -46,6 +46,21 @@ CREATE TABLE users (
     password_hash VARCHAR(255)
 );
 
+CREATE TABLE assignments (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50),
+    subject_id INT REFERENCES subjects(id),
+    weight INT CHECK (weight <= 100),
+    date DATE,
+);
+
+CREATE TABLE grades (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES students(id),
+    assignment_id INT REFERENCES assignments(id),
+    mark INT CHECK (mark >= 0 AND mark <= 100)
+);
+
 INSERT INTO subjects (name) VALUES
 ('Физика'),
 ('Калкулус'),

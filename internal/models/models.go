@@ -10,6 +10,26 @@ type User struct {
 	Password string `json:"password"`
 }
 
+type Assignment struct {
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	SubjectID int       `json:"subject_id"`
+	Weight    int       `json:"weight"`
+	Date      time.Time `json:"date"`
+}
+
+type Grade struct {
+	ID           int `json:"id"`
+	StudentID    int `json:"student_id"`
+	AssignmentID int `json:"assignment_id"`
+	Mark         int `json:"mark"`
+}
+
+type StudentGPA struct {
+	StudentID int
+	GPA       float64
+}
+
 type Schedule struct {
 	ID        int       `json:"id"`
 	GroupID   int       `json:"group_id"`

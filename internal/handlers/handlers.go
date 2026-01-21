@@ -115,6 +115,149 @@ func (h *Handler) GetAttendanceByStudent(c echo.Context) error {
 	return c.JSON(http.StatusOK, attendanceList)
 }
 
+func (h *Handler) NewAssignment(c echo.Context) error {
+	var input struct {
+		Name      string `json:"name"`
+		SubjectID int    `json:"subject_id"`
+		Weight    int    `json:"weight"`
+		Date      string `json:"date"`
+	}
+
+	if err := c.Bind(&input); err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
+
+	parsedDate, err := time.Parse("02.01.2006", input.Date)
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
+
+	assignment := &models.Assignment{
+		Name:      input.Name,
+		SubjectID: input.SubjectID,
+		Weight:    input.Weight,
+		Date:      parsedDate,
+	}
+
+	id, err := h.service.NewAssignment(c.Request().Context(), assignment)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, map[string]int{"id": id})
+}
+
+func (h *Handler) NewGrade(c echo.Context) error {
+	var input struct {
+		StudentID    int `json:"student_id"`
+		AssignmentID int `json:"assignment_id"`
+		Mark         int `json:"mark"`
+	}
+
+	if err := c.Bind(&input); err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
+
+	grade := &models.Grade{
+		StudentID:    input.StudentID,
+		AssignmentID: input.AssignmentID,
+		Mark:         input.Mark,
+	}
+
+	id, err := h.service.NewGrade(c.Request().Context(), grade)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, map[string]int{"id": id})
+}
+
+func (h *Handler) GetGPA(c echo.Context) error {
+	studentID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
+
+	gpa, err := h.service.GetGPA(c.Request().Context(), studentID)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"student_id": studentID,
+		"gpa":        gpa,
+	})
+}
+
+func (h *Handler) GetSubjectGPA(c echo.Context) error {
+	studentID, err := strconv.Atoi(c.Param("studentId"))
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
+
+	subjectID, err := strconv.Atoi(c.Param("subjectId"))
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
+
+	gpa, err := h.service.GetSubjectGPA(c.Request().Context(), studentID, subjectID)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"student_id": studentID,
+		"subject_id": subjectID,
+		"gpa":        gpa,
+	})
+}
+
+func (h *Handler) GetGPARankingByGroup(c echo.Context) error {
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
+
+	ranking, err := h.service.RankingByGroup(c.Request().Context(), groupID)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, ranking)
+}
+
+func (h *Handler) GetGPARankingBySubject(c echo.Context) error {
+	subjectID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
+	ranking, err := h.service.RankingBySubject(c.Request().Context(), subjectID)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, ranking)
+}
+
+func (h *Handler) GetSubjectGPARankingByGroup(c echo.Context) error {
+	groupID, err := strconv.Atoi(c.Param("groupId"))
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
+
+	subjectID, err := strconv.Atoi(c.Param("subjectId"))
+	if err != nil {
+		return JSON(c, http.StatusBadRequest, err)
+	}
+
+	ranking, err := h.service.RankingByGroupSubject(c.Request().Context(), groupID, subjectID)
+	if err != nil {
+		return JSON(c, http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, ranking)
+}
+
 func formatSchedules(schedules []models.Schedule) []map[string]interface{} {
 	result := make([]map[string]interface{}, len(schedules))
 	for i, s := range schedules {
@@ -130,5 +273,8 @@ func formatSchedules(schedules []models.Schedule) []map[string]interface{} {
 }
 
 func JSON(c echo.Context, status int, err error) error {
-	return c.JSON(status, map[string]string{"error": err.Error()})
+	response := models.ErrorResponse{
+		Error: err.Error(),
+	}
+	return c.JSON(status, response)
 }

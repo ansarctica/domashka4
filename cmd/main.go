@@ -20,7 +20,7 @@ const port = ":8080"
 func main() {
 
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Nid't find .env file", "error", err)
+		log.Fatal("Did't find .env file", "error", err)
 	}
 
 	dbURL := os.Getenv("DATABASE_URL")
@@ -53,6 +53,14 @@ func main() {
 	protected.POST("/attendance/subject", h.NewAttendance)
 	protected.GET("/attendanceBySubjectId/:id", h.GetAttendanceBySubject)
 	protected.GET("/attendanceByStudentId/:id", h.GetAttendanceByStudent)
+	protected.POST("/assignments", h.NewAssignment)
+	protected.POST("/grades", h.NewGrade)
+	protected.GET("/students/:id/gpa", h.GetGPA)
+	protected.GET("/students/:studentId/subjects/:subjectId/gpa", h.GetSubjectGPA)
+
+	protected.GET("/groups/:id/ranking", h.GetGPARankingByGroup)
+	protected.GET("/subjects/:id/ranking", h.GetGPARankingBySubject)
+	protected.GET("/groups/:groupId/subjects/:subjectId/ranking", h.GetSubjectGPARankingByGroup)
 
 	e.Logger.Fatal(e.Start(port))
 }
