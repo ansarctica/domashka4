@@ -51,7 +51,7 @@ CREATE TABLE assignments (
     name VARCHAR(50),
     subject_id INT REFERENCES subjects(id),
     weight INT CHECK (weight <= 100),
-    date DATE,
+    date DATE
 );
 
 CREATE TABLE grades (

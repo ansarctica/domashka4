@@ -15,12 +15,17 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-const port = ":8080"
-
 func main() {
 
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Did't find .env file", "error", err)
+		log.Println("Did't find .env file")
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = ":8080"
+	} else if port[0] != ':' {
+		port = ":" + port
 	}
 
 	dbURL := os.Getenv("DATABASE_URL")

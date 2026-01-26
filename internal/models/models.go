@@ -57,8 +57,6 @@ type StudentWithGroupName struct {
 	GroupName string `json:"group_name"`
 }
 
-type GroupSchedule []Schedule
-
 type Attendance struct {
 	ID        int       `json:"id"`
 	SubjectID int       `json:"subject_id"`
