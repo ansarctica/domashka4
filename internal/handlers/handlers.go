@@ -18,6 +18,16 @@ func NewHandler(service *service.Service) *Handler {
 	return &Handler{service: service}
 }
 
+// GetStudent godoc
+// @Summary      Get student details
+// @Tags         students
+// @Produce      json
+// @Param        id   path      int  true  "Student ID"
+// @Success      200  {object}  models.Student
+// @Failure      400  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /student/{id} [get]
 func (h *Handler) GetStudent(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -32,6 +42,14 @@ func (h *Handler) GetStudent(c echo.Context) error {
 	return c.JSON(http.StatusOK, student)
 }
 
+// GetAllSchedules godoc
+// @Summary      Get all schedules
+// @Tags         schedule
+// @Produce      json
+// @Success      200  {array}   map[string]interface{}
+// @Failure      500  {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /all_class_schedule [get]
 func (h *Handler) GetAllSchedules(c echo.Context) error {
 	schedules, err := h.service.GetAllSchedules(c.Request().Context())
 	if err != nil {
@@ -41,6 +59,16 @@ func (h *Handler) GetAllSchedules(c echo.Context) error {
 	return c.JSON(http.StatusOK, formatSchedules(schedules))
 }
 
+// GetGroupSchedule godoc
+// @Summary      Get schedule by group
+// @Tags         schedule
+// @Produce      json
+// @Param        id   path      int  true  "Group ID"
+// @Success      200  {array}   map[string]interface{}
+// @Failure      400  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /schedule/group/{id} [get]
 func (h *Handler) GetGroupSchedule(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -55,13 +83,19 @@ func (h *Handler) GetGroupSchedule(c echo.Context) error {
 	return c.JSON(http.StatusOK, formatSchedules(schedule))
 }
 
+// NewAttendance godoc
+// @Summary      Record attendance
+// @Tags         attendance
+// @Accept       json
+// @Produce      json
+// @Param        input  body      attendanceInput  true  "Attendance data"
+// @Success      200    {object}  map[string]int
+// @Failure      400    {object}  models.ErrorResponse
+// @Failure      500    {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /attendance/subject [post]
 func (h *Handler) NewAttendance(c echo.Context) error {
-	var input struct {
-		SubjectID int    `json:"subject_id"`
-		VisitDay  string `json:"visit_day"`
-		Visited   bool   `json:"visited"`
-		StudentID int    `json:"Student_id"`
-	}
+	var input attendanceInput
 
 	if err := c.Bind(&input); err != nil {
 		return JSON(c, http.StatusBadRequest, err)
@@ -87,6 +121,16 @@ func (h *Handler) NewAttendance(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]int{"id": id})
 }
 
+// GetAttendanceBySubject godoc
+// @Summary      Get attendance by subject
+// @Tags         attendance
+// @Produce      json
+// @Param        id   path      int  true  "Subject ID"
+// @Success      200  {array}   models.Attendance
+// @Failure      400  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /attendanceBySubjectId/{id} [get]
 func (h *Handler) GetAttendanceBySubject(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -101,6 +145,16 @@ func (h *Handler) GetAttendanceBySubject(c echo.Context) error {
 	return c.JSON(http.StatusOK, attendanceList)
 }
 
+// GetAttendanceByStudent godoc
+// @Summary      Get attendance by student
+// @Tags         attendance
+// @Produce      json
+// @Param        id   path      int  true  "Student ID"
+// @Success      200  {array}   models.Attendance
+// @Failure      400  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /attendanceByStudentId/{id} [get]
 func (h *Handler) GetAttendanceByStudent(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -115,13 +169,19 @@ func (h *Handler) GetAttendanceByStudent(c echo.Context) error {
 	return c.JSON(http.StatusOK, attendanceList)
 }
 
+// NewAssignment godoc
+// @Summary      Create assignment
+// @Tags         assignments
+// @Accept       json
+// @Produce      json
+// @Param        input  body      assignmentInput  true  "Assignment data"
+// @Success      200    {object}  map[string]int
+// @Failure      400    {object}  models.ErrorResponse
+// @Failure      500    {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /assignments [post]
 func (h *Handler) NewAssignment(c echo.Context) error {
-	var input struct {
-		Name      string `json:"name"`
-		SubjectID int    `json:"subject_id"`
-		Weight    int    `json:"weight"`
-		Date      string `json:"date"`
-	}
+	var input assignmentInput
 
 	if err := c.Bind(&input); err != nil {
 		return JSON(c, http.StatusBadRequest, err)
@@ -147,12 +207,19 @@ func (h *Handler) NewAssignment(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]int{"id": id})
 }
 
+// NewGrade godoc
+// @Summary      Add a grade
+// @Tags         grades
+// @Accept       json
+// @Produce      json
+// @Param        input  body      gradeInput  true  "Grade data"
+// @Success      200    {object}  map[string]int
+// @Failure      400    {object}  models.ErrorResponse
+// @Failure      500    {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /grades [post]
 func (h *Handler) NewGrade(c echo.Context) error {
-	var input struct {
-		StudentID    int `json:"student_id"`
-		AssignmentID int `json:"assignment_id"`
-		Mark         int `json:"mark"`
-	}
+	var input gradeInput
 
 	if err := c.Bind(&input); err != nil {
 		return JSON(c, http.StatusBadRequest, err)
@@ -172,6 +239,16 @@ func (h *Handler) NewGrade(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]int{"id": id})
 }
 
+// GetGPA godoc
+// @Summary      Get Student GPA
+// @Tags         gpa
+// @Produce      json
+// @Param        id   path      int  true  "Student ID"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /students/{id}/gpa [get]
 func (h *Handler) GetGPA(c echo.Context) error {
 	studentID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -189,6 +266,17 @@ func (h *Handler) GetGPA(c echo.Context) error {
 	})
 }
 
+// GetSubjectGPA godoc
+// @Summary      Get Student GPA for a specific subject
+// @Tags         gpa
+// @Produce      json
+// @Param        studentId  path      int  true  "Student ID"
+// @Param        subjectId  path      int  true  "Subject ID"
+// @Success      200        {object}  map[string]interface{}
+// @Failure      400        {object}  models.ErrorResponse
+// @Failure      500        {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /students/{studentId}/subjects/{subjectId}/gpa [get]
 func (h *Handler) GetSubjectGPA(c echo.Context) error {
 	studentID, err := strconv.Atoi(c.Param("studentId"))
 	if err != nil {
@@ -212,6 +300,16 @@ func (h *Handler) GetSubjectGPA(c echo.Context) error {
 	})
 }
 
+// GetGPARankingByGroup godoc
+// @Summary      Get GPA Ranking by Group
+// @Tags         ranking
+// @Produce      json
+// @Param        id   path      int  true  "Group ID"
+// @Success      200  {array}   map[string]interface{}
+// @Failure      400  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /groups/{id}/ranking [get]
 func (h *Handler) GetGPARankingByGroup(c echo.Context) error {
 	groupID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -226,6 +324,16 @@ func (h *Handler) GetGPARankingByGroup(c echo.Context) error {
 	return c.JSON(http.StatusOK, ranking)
 }
 
+// GetGPARankingBySubject godoc
+// @Summary      Get GPA Ranking by Subject
+// @Tags         ranking
+// @Produce      json
+// @Param        id   path      int  true  "Subject ID"
+// @Success      200  {array}   map[string]interface{}
+// @Failure      400  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /subjects/{id}/ranking [get]
 func (h *Handler) GetGPARankingBySubject(c echo.Context) error {
 	subjectID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -239,6 +347,17 @@ func (h *Handler) GetGPARankingBySubject(c echo.Context) error {
 	return c.JSON(http.StatusOK, ranking)
 }
 
+// GetSubjectGPARankingByGroup godoc
+// @Summary      Get Subject GPA Ranking by Group
+// @Tags         ranking
+// @Produce      json
+// @Param        groupId    path      int  true  "Group ID"
+// @Param        subjectId  path      int  true  "Subject ID"
+// @Success      200        {array}   map[string]interface{}
+// @Failure      400        {object}  models.ErrorResponse
+// @Failure      500        {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /groups/{groupId}/subjects/{subjectId}/ranking [get]
 func (h *Handler) GetSubjectGPARankingByGroup(c echo.Context) error {
 	groupID, err := strconv.Atoi(c.Param("groupId"))
 	if err != nil {
@@ -277,4 +396,24 @@ func JSON(c echo.Context, status int, err error) error {
 		Error: err.Error(),
 	}
 	return c.JSON(status, response)
+}
+
+type attendanceInput struct {
+	SubjectID int    `json:"subject_id"`
+	VisitDay  string `json:"visit_day"`
+	Visited   bool   `json:"visited"`
+	StudentID int    `json:"Student_id"`
+}
+
+type assignmentInput struct {
+	Name      string `json:"name"`
+	SubjectID int    `json:"subject_id"`
+	Weight    int    `json:"weight"`
+	Date      string `json:"date"`
+}
+
+type gradeInput struct {
+	StudentID    int `json:"student_id"`
+	AssignmentID int `json:"assignment_id"`
+	Mark         int `json:"mark"`
 }

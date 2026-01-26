@@ -13,6 +13,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	_ "github.com/ansarctica/domashka4/docs"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 func main() {
@@ -42,6 +45,8 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	auth := e.Group("/api/auth")
 	auth.POST("/register", h.Register)

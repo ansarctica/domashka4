@@ -9,6 +9,17 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// Register godoc
+// @Summary      Register a new user
+// @Description  Create a new user account
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        input  body      models.User  true  "User credentials"
+// @Success      200    {object}  map[string]interface{}
+// @Failure      400    {object}  models.ErrorResponse
+// @Failure      500    {object}  models.ErrorResponse
+// @Router       /api/auth/register [post]
 func (h *Handler) Register(c echo.Context) error {
 	var input models.User
 
@@ -30,6 +41,17 @@ func (h *Handler) Register(c echo.Context) error {
 	})
 }
 
+// Login godoc
+// @Summary      Login
+// @Description  Login and get a JWT token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        input  body      models.User  true  "User credentials"
+// @Success      200    {object}  map[string]string
+// @Failure      400    {object}  models.ErrorResponse
+// @Failure      401    {object}  models.ErrorResponse
+// @Router       /api/auth/login [post]
 func (h *Handler) Login(c echo.Context) error {
 	var input models.User
 
@@ -47,6 +69,17 @@ func (h *Handler) Login(c echo.Context) error {
 	})
 }
 
+// GetMe godoc
+// @Summary      Get current user info
+// @Description  Get ID and Email of the logged-in user
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  map[string]interface{}
+// @Failure      401  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Security     ApiKeyAuth
+// @Router       /api/users/me [get]
 func (h *Handler) GetMe(c echo.Context) error {
 	id, ok := c.Get("userId").(int)
 	if !ok {
