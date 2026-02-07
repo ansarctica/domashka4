@@ -51,7 +51,21 @@ func main() {
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:5173", "https://front-for-hw4.onrender.com/"},
-		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE, echo.PATCH},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+		},
+		AllowMethods: []string{
+			echo.GET,
+			echo.PUT,
+			echo.POST,
+			echo.DELETE,
+			echo.PATCH,
+			echo.OPTIONS,
+		},
+		MaxAge: 86400,
 	}))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
