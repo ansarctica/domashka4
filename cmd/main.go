@@ -2,9 +2,8 @@ package main
 
 import (
 	"context"
-	"os"
-
 	"log"
+	"os"
 
 	"github.com/ansarctica/domashka4/internal/handlers"
 	"github.com/ansarctica/domashka4/internal/postgres"
@@ -13,13 +12,19 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 
 	_ "github.com/ansarctica/domashka4/docs"
-	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-func main() {
+// @title Student Management API
+// @version 1.0
+// @description API for managing students, schedules, attendance, and grades.
 
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("Did't find .env file")
 	}
@@ -43,34 +48,43 @@ func main() {
 	h := handlers.NewHandler(srv)
 
 	e := echo.New()
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173"},
+		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE, echo.PATCH},
+	}))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	// Swagger Endpoint
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	auth := e.Group("/api/auth")
+	auth := e.Group("/auth")
 	auth.POST("/register", h.Register)
 	auth.POST("/login", h.Login)
 
-	api := e.Group("/api", h.UserIdentity)
-	api.GET("/users/me", h.GetMe)
-
 	protected := e.Group("", h.UserIdentity)
-
-	protected.GET("/student/:id", h.GetStudent)
-	protected.GET("/all_class_schedule", h.GetAllSchedules)
-	protected.GET("/schedule/group/:id", h.GetGroupSchedule)
-	protected.POST("/attendance/subject", h.NewAttendance)
-	protected.GET("/attendanceBySubjectId/:id", h.GetAttendanceBySubject)
-	protected.GET("/attendanceByStudentId/:id", h.GetAttendanceByStudent)
-	protected.POST("/assignments", h.NewAssignment)
-	protected.POST("/grades", h.NewGrade)
-	protected.GET("/students/:id/gpa", h.GetGPA)
-	protected.GET("/students/:studentId/subjects/:subjectId/gpa", h.GetSubjectGPA)
-
-	protected.GET("/groups/:id/ranking", h.GetGPARankingByGroup)
-	protected.GET("/subjects/:id/ranking", h.GetGPARankingBySubject)
-	protected.GET("/groups/:groupId/subjects/:subjectId/ranking", h.GetSubjectGPARankingByGroup)
+	protected.GET("/users/me", h.GetMe)
+	protected.GET("/students", h.GetStudents)
+	protected.GET("/students/:id", h.GetStudent)
+	protected.POST("/students", h.CreateStudent)
+	protected.PATCH("/students/:id", h.UpdateStudent)
+	protected.DELETE("/students/:id", h.DeleteStudent)
+	protected.GET("/students/:id/gpa", h.GetStudentGPA)
+	protected.GET("/groups", h.GetGroups)
+	protected.GET("/schedules", h.GetSchedules)
+	protected.POST("/schedules", h.CreateSchedule)
+	protected.PATCH("/schedules/:id", h.UpdateSchedule)
+	protected.DELETE("/schedules/:id", h.DeleteSchedule)
+	protected.GET("/attendance", h.GetAttendance)
+	protected.POST("/attendance", h.CreateAttendance)
+	protected.PATCH("/attendance/:id", h.UpdateAttendance)
+	protected.DELETE("/attendance/:id", h.DeleteAttendance)
+	protected.GET("/assignments", h.GetAssignments)
+	protected.POST("/assignments", h.CreateAssignment)
+	protected.POST("/grades", h.CreateGrade)
+	protected.GET("/rankings", h.GetRankings)
+	protected.GET("/subjects", h.GetSubjects)
 
 	e.Logger.Fatal(e.Start(port))
 }

@@ -11,11 +11,11 @@ type User struct {
 }
 
 type Assignment struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	SubjectID int       `json:"subject_id"`
-	Weight    int       `json:"weight"`
-	Date      time.Time `json:"date"`
+	ID          int       `json:"id"`
+	Name        string    `json:"name"`
+	SubjectName string    `json:"subject_name"`
+	Weight      int       `json:"weight"`
+	Date        time.Time `json:"date"`
 }
 
 type Grade struct {
@@ -26,8 +26,8 @@ type Grade struct {
 }
 
 type StudentGPA struct {
-	StudentID int
-	GPA       float64
+	StudentID int     `json:"student_id"`
+	GPA       float64 `json:"gpa"`
 }
 
 type Schedule struct {
@@ -39,28 +39,35 @@ type Schedule struct {
 }
 
 type Group struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	Department string `json:"department"`
+	ID int `json:"id"`
 }
 
 type Student struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	BirthDate time.Time `json:"birth_date"`
-	Gender    string    `json:"gender"`
-	GroupID   int       `json:"group_id"`
-}
-
-type StudentWithGroupName struct {
-	Student
-	GroupName string `json:"group_name"`
+	ID         int       `json:"id"`
+	Name       string    `json:"name"`
+	BirthDate  time.Time `json:"birth_date"`
+	Gender     string    `json:"gender"`
+	GroupID    int       `json:"group_id"`
+	Major      string    `json:"major"`
+	CourseYear int       `json:"course_year"`
 }
 
 type Attendance struct {
-	ID        int       `json:"id"`
-	SubjectID int       `json:"subject_id"`
-	VisitDay  time.Time `json:"visit_day"`
-	Visited   bool      `json:"visited"`
-	StudentID int       `json:"student_id"`
+	ID          int       `json:"id"`
+	SubjectName string    `json:"subject_name"`
+	VisitDay    time.Time `json:"visit_day"`
+	Visited     bool      `json:"visited"`
+	StudentID   int       `json:"student_id"`
+}
+
+type StudentFilter struct {
+	GroupID    *int
+	Major      *string
+	CourseYear *int
+	Limit      int
+	Offset     int
+}
+
+type Subject struct {
+	Name string `json:"name"`
 }

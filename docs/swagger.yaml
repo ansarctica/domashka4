@@ -1,27 +1,27 @@
 definitions:
-  handlers.assignmentInput:
+  handlers.AssignmentInput:
     properties:
       date:
         type: string
       name:
         type: string
-      subject_id:
-        type: integer
+      subject_name:
+        type: string
       weight:
         type: integer
     type: object
-  handlers.attendanceInput:
+  handlers.AttendanceInput:
     properties:
-      Student_id:
+      student_id:
         type: integer
-      subject_id:
-        type: integer
+      subject_name:
+        type: string
       visit_day:
         type: string
       visited:
         type: boolean
     type: object
-  handlers.gradeInput:
+  handlers.GradeInput:
     properties:
       assignment_id:
         type: integer
@@ -30,14 +30,27 @@ definitions:
       student_id:
         type: integer
     type: object
+  models.Assignment:
+    properties:
+      date:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      subject_name:
+        type: string
+      weight:
+        type: integer
+    type: object
   models.Attendance:
     properties:
       id:
         type: integer
       student_id:
         type: integer
-      subject_id:
-        type: integer
+      subject_name:
+        type: string
       visit_day:
         type: string
       visited:
@@ -48,16 +61,50 @@ definitions:
       error:
         type: string
     type: object
+  models.Group:
+    properties:
+      id:
+        type: integer
+    type: object
+  models.Schedule:
+    properties:
+      end_time:
+        type: string
+      group_id:
+        type: integer
+      id:
+        type: integer
+      start_time:
+        type: string
+      subject:
+        type: string
+    type: object
   models.Student:
     properties:
       birth_date:
         type: string
+      course_year:
+        type: integer
       gender:
         type: string
       group_id:
         type: integer
       id:
         type: integer
+      major:
+        type: string
+      name:
+        type: string
+    type: object
+  models.StudentGPA:
+    properties:
+      gpa:
+        type: number
+      student_id:
+        type: integer
+    type: object
+  models.Subject:
+    properties:
       name:
         type: string
     type: object
@@ -73,8 +120,16 @@ definitions:
 info:
   contact: {}
 paths:
-  /all_class_schedule:
+  /assignments:
     get:
+      consumes:
+      - application/json
+      description: Get a list of assignments, optionally filtered by subject
+      parameters:
+      - description: Filter by Subject Name
+        in: query
+        name: subject_name
+        type: string
       produces:
       - application/json
       responses:
@@ -82,25 +137,201 @@ paths:
           description: OK
           schema:
             items:
-              additionalProperties: true
-              type: object
+              $ref: '#/definitions/models.Assignment'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Get all schedules
+      - BearerAuth: []
+      summary: Get assignments
       tags:
-      - schedule
-  /api/auth/login:
+      - Assignments
     post:
       consumes:
       - application/json
-      description: Login and get a JWT token
+      description: Add a new assignment for a subject
       parameters:
-      - description: User credentials
+      - description: Assignment Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AssignmentInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Returns created ID
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create assignment
+      tags:
+      - Assignments
+  /attendance:
+    get:
+      consumes:
+      - application/json
+      description: Get attendance records filtered by student ID or subject name
+      parameters:
+      - description: Filter by Student ID
+        in: query
+        name: student_id
+        type: integer
+      - description: Filter by Subject Name
+        in: query
+        name: subject_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Attendance'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get attendance
+      tags:
+      - Attendance
+    post:
+      consumes:
+      - application/json
+      description: Create a new attendance record for a student
+      parameters:
+      - description: Attendance Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AttendanceInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Returns created ID
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Record attendance
+      tags:
+      - Attendance
+  /attendance/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove an attendance record from the database
+      parameters:
+      - description: Attendance ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns status
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete attendance
+      tags:
+      - Attendance
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing attendance record
+      parameters:
+      - description: Attendance ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Attendance Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AttendanceInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns status
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update attendance
+      tags:
+      - Attendance
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate using email and password to receive a JWT token
+      parameters:
+      - description: User Credentials
         in: body
         name: input
         required: true
@@ -110,7 +341,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Returns JWT token
           schema:
             additionalProperties:
               type: string
@@ -125,14 +356,14 @@ paths:
             $ref: '#/definitions/models.ErrorResponse'
       summary: Login
       tags:
-      - auth
-  /api/auth/register:
+      - Auth
+  /auth/register:
     post:
       consumes:
       - application/json
-      description: Create a new user account
+      description: Register a new user with email and password
       parameters:
-      - description: User credentials
+      - description: User Registration Details
         in: body
         name: input
         required: true
@@ -142,9 +373,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Returns user ID
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: integer
             type: object
         "400":
           description: Bad Request
@@ -156,49 +388,24 @@ paths:
             $ref: '#/definitions/models.ErrorResponse'
       summary: Register a new user
       tags:
-      - auth
-  /api/users/me:
-    get:
-      consumes:
-      - application/json
-      description: Get ID and Email of the logged-in user
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get current user info
-      tags:
-      - users
-  /assignments:
+      - Auth
+  /grades:
     post:
       consumes:
       - application/json
+      description: Record a grade for a specific assignment
       parameters:
-      - description: Assignment data
+      - description: Grade Data
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/handlers.assignmentInput'
+          $ref: '#/definitions/handlers.GradeInput'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Returns created ID
           schema:
             additionalProperties:
               type: integer
@@ -212,26 +419,118 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Create assignment
+      - BearerAuth: []
+      summary: Create grade
       tags:
-      - assignments
-  /attendance/subject:
-    post:
+      - Grades
+  /groups:
+    get:
       consumes:
       - application/json
-      parameters:
-      - description: Attendance data
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.attendanceInput'
+      description: Get a list of all student groups
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Group'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get groups
+      tags:
+      - Groups
+  /rankings:
+    get:
+      consumes:
+      - application/json
+      description: Get student rankings by GPA, filtered by group or subject
+      parameters:
+      - description: Filter by Group ID
+        in: query
+        name: group_id
+        type: integer
+      - description: Filter by Subject Name
+        in: query
+        name: subject_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.StudentGPA'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get rankings
+      tags:
+      - Grades
+  /schedules:
+    get:
+      consumes:
+      - application/json
+      description: Get schedules, optionally filtered by group ID
+      parameters:
+      - description: Filter by Group ID
+        in: query
+        name: group_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get schedules
+      tags:
+      - Schedules
+    post:
+      consumes:
+      - application/json
+      description: Add a new class schedule entry
+      parameters:
+      - description: Schedule Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Schedule'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Returns created ID
           schema:
             additionalProperties:
               type: integer
@@ -245,12 +544,168 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Record attendance
+      - BearerAuth: []
+      summary: Create schedule
       tags:
-      - attendance
-  /attendanceByStudentId/{id}:
+      - Schedules
+  /schedules/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a schedule entry from the database
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns status
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete schedule
+      tags:
+      - Schedules
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing schedule entry
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Schedule Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Schedule'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns status
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update schedule
+      tags:
+      - Schedules
+  /students:
     get:
+      consumes:
+      - application/json
+      description: Retrieve students with optional filtering by group, major, and
+        course year
+      parameters:
+      - description: Filter by Group ID
+        in: query
+        name: group_id
+        type: integer
+      - description: Filter by Major
+        in: query
+        name: major
+        type: string
+      - description: Filter by Course Year
+        in: query
+        name: course_year
+        type: integer
+      - description: Limit number of results (default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Student'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all students
+      tags:
+      - Students
+    post:
+      consumes:
+      - application/json
+      description: Add a new student record to the database
+      parameters:
+      - description: Student Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Student'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Returns created ID
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a student
+      tags:
+      - Students
+  /students/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a student record from the database
       parameters:
       - description: Student ID
         in: path
@@ -261,73 +716,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.Attendance'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get attendance by student
-      tags:
-      - attendance
-  /attendanceBySubjectId/{id}:
-    get:
-      parameters:
-      - description: Subject ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.Attendance'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get attendance by subject
-      tags:
-      - attendance
-  /grades:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Grade data
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.gradeInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
+          description: Returns status
           schema:
             additionalProperties:
-              type: integer
+              type: string
             type: object
         "400":
           description: Bad Request
@@ -338,110 +730,14 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Add a grade
+      - BearerAuth: []
+      summary: Delete a student
       tags:
-      - grades
-  /groups/{groupId}/subjects/{subjectId}/ranking:
+      - Students
     get:
-      parameters:
-      - description: Group ID
-        in: path
-        name: groupId
-        required: true
-        type: integer
-      - description: Subject ID
-        in: path
-        name: subjectId
-        required: true
-        type: integer
-      produces:
+      consumes:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              additionalProperties: true
-              type: object
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get Subject GPA Ranking by Group
-      tags:
-      - ranking
-  /groups/{id}/ranking:
-    get:
-      parameters:
-      - description: Group ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              additionalProperties: true
-              type: object
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get GPA Ranking by Group
-      tags:
-      - ranking
-  /schedule/group/{id}:
-    get:
-      parameters:
-      - description: Group ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              additionalProperties: true
-              type: object
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get schedule by group
-      tags:
-      - schedule
-  /student/{id}:
-    get:
+      description: Get details of a student by their ID
       parameters:
       - description: Student ID
         in: path
@@ -464,12 +760,53 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Get student details
+      - BearerAuth: []
+      summary: Get a student
       tags:
-      - students
+      - Students
+    patch:
+      consumes:
+      - application/json
+      description: Update details of an existing student
+      parameters:
+      - description: Student ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Student Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Student'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns status
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a student
+      tags:
+      - Students
   /students/{id}/gpa:
     get:
+      consumes:
+      - application/json
+      description: Calculate and return the GPA for a specific student
       parameters:
       - description: Student ID
         in: path
@@ -493,52 +830,15 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get Student GPA
       tags:
-      - gpa
-  /students/{studentId}/subjects/{subjectId}/gpa:
+      - Students
+  /subjects:
     get:
-      parameters:
-      - description: Student ID
-        in: path
-        name: studentId
-        required: true
-        type: integer
-      - description: Subject ID
-        in: path
-        name: subjectId
-        required: true
-        type: integer
-      produces:
+      consumes:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get Student GPA for a specific subject
-      tags:
-      - gpa
-  /subjects/{id}/ranking:
-    get:
-      parameters:
-      - description: Subject ID
-        in: path
-        name: id
-        required: true
-        type: integer
+      description: Get a list of all available subjects
       produces:
       - application/json
       responses:
@@ -546,11 +846,36 @@ paths:
           description: OK
           schema:
             items:
-              additionalProperties: true
-              type: object
+              $ref: '#/definitions/models.Subject'
             type: array
-        "400":
-          description: Bad Request
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get subjects
+      tags:
+      - Subjects
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: Get the profile details of the currently logged-in user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/models.ErrorResponse'
         "500":
@@ -558,8 +883,8 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Get GPA Ranking by Subject
+      - BearerAuth: []
+      summary: Get Current User
       tags:
-      - ranking
+      - Auth
 swagger: "2.0"
