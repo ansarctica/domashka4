@@ -50,7 +50,7 @@ func main() {
 	e := echo.New()
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:5173", "https://front-for-hw4.onrender.com/"},
+		AllowOrigins: []string{"http://localhost:5173", "https://front-for-hw4.onrender.com"},
 		AllowHeaders: []string{
 			echo.HeaderOrigin,
 			echo.HeaderContentType,
